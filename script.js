@@ -6,52 +6,41 @@ const responseMessage = document.getElementById('responseMessage');
 
 const STORAGE_KEY = 'feedbackFormData';
 
-// Валидация ФИО (только буквы, пробелы и дефисы)
 function validateFullName(name) {
     return /^[a-zA-Zа-яА-ЯёЁ\s\-]+$/.test(name);
 }
 
-// Валидация телефона (только цифры, пробелы и плюс)
 function validatePhone(phone) {
     return /^[\d\s\+]+$/.test(phone);
 }
 
-// Открытие модального окна
 openModalBtn.addEventListener('click', function() {
     feedbackModal.style.display = 'flex';
-    // Изменение URL с помощью History API
     history.pushState({ modalOpen: true }, '', '#feedback');
-    // Восстановление данных из LocalStorage
     restoreFormData();
 });
 
-// Закрытие модального окна
 closeModalBtn.addEventListener('click', closeModal);
 
-// Закрытие модального окна при клике вне его области
 feedbackModal.addEventListener('click', function(e) {
     if (e.target === feedbackModal) {
         closeModal();
     }
 });
 
-// Обработка нажатия кнопки "Назад" в браузере
 window.addEventListener('popstate', function(e) {
     if (location.hash !== '#feedback') {
         closeModal();
     }
 });
 
-// Функция закрытия модального окна
 function closeModal() {
     feedbackModal.style.display = 'none';
-    // Возврат к исходному URL
     if (location.hash === '#feedback') {
         history.back();
     }
 }
 
-// Сохранение данных формы в LocalStorage
 function saveFormData() {
     const formData = {
         fullName: document.getElementById('fullName').value,
@@ -63,7 +52,6 @@ function saveFormData() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
 }
 
-// Восстановление данных формы из LocalStorage
 function restoreFormData() {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
@@ -76,19 +64,16 @@ function restoreFormData() {
     }
 }
 
-// Очистка данных формы в LocalStorage
 function clearFormData() {
     localStorage.removeItem(STORAGE_KEY);
 }
 
-// Валидация формы перед отправкой
 function validateForm() {
     const fullName = document.getElementById('fullName').value;
     const phone = document.getElementById('phone').value;
 
     let isValid = true;
 
-    // Валидация ФИО
     if (fullName && !validateFullName(fullName)) {
         showFieldError('fullName', 'ФИО может содержать только буквы, пробелы и дефисы');
         isValid = false;
@@ -96,7 +81,6 @@ function validateForm() {
         clearFieldError('fullName');
     }
 
-    // Валидация телефона
     if (phone && !validatePhone(phone)) {
         showFieldError('phone', 'Телефон может содержать только цифры, пробелы, +');
         isValid = false;
@@ -107,18 +91,15 @@ function validateForm() {
     return isValid;
 }
 
-// Показать ошибку для конкретного поля
 function showFieldError(fieldId, message) {
     const field = document.getElementById(fieldId);
     const formGroup = field.closest('.form-group');
 
-    // Удаляем старую ошибку если есть
     const existingError = formGroup.querySelector('.field-error');
     if (existingError) {
         existingError.remove();
     }
 
-    // Добавляем новую ошибку
     const errorElement = document.createElement('div');
     errorElement.className = 'field-error';
     errorElement.textContent = message;
@@ -127,7 +108,6 @@ function showFieldError(fieldId, message) {
     field.style.borderColor = '#dc3545';
 }
 
-// Очистить ошибку поля
 function clearFieldError(fieldId) {
     const field = document.getElementById(fieldId);
     const formGroup = field.closest('.form-group');
@@ -140,34 +120,22 @@ function clearFieldError(fieldId) {
     field.style.borderColor = '#C2C5CE';
 }
 
-// Обработка отправки формы
 feedbackForm.addEventListener('submit', function(e) {
     e.preventDefault();
 
-    // Проверяем валидацию перед отправкой
     if (!validateForm()) {
         showMessage('Пожалуйста, исправьте ошибки в форме', 'error');
         return;
     }
 
-    // Сбор данных формы
     const formData = new FormData(feedbackForm);
-    const data = {
-        fullName: formData.get('fullName'),
-        email: formData.get('email'),
-        phone: formData.get('phone'),
-        organization: formData.get('organization'),
-        message: formData.get('message'),
-        privacyPolicy: formData.get('privacyPolicy')
-    };
 
-    // Отправка данных на сервер
-    fetch('https://formspree.io/f/xjvnnqjq', {
+    fetch('https://formcarry.com/s/ZR_aiSuf9jL', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Accept': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: formData
     })
     .then(response => {
         if (response.ok) {
@@ -175,7 +143,9 @@ feedbackForm.addEventListener('submit', function(e) {
             feedbackForm.reset();
             clearFormData();
         } else {
-            throw new Error('Ошибка отправки формы');
+            return response.json().then(err => {
+                throw new Error(err.error || 'Ошибка отправки формы');
+            });
         }
     })
     .catch(error => {
@@ -184,19 +154,16 @@ feedbackForm.addEventListener('submit', function(e) {
     });
 });
 
-// Функция отображения сообщения
 function showMessage(text, type) {
     responseMessage.textContent = text;
     responseMessage.className = 'message ' + type;
     responseMessage.style.display = 'block';
 
-    // Автоматическое скрытие сообщения через 5 секунд
     setTimeout(() => {
         responseMessage.style.display = 'none';
     }, 5000);
 }
 
-// Обработчики для реальной валидации при вводе
 document.getElementById('fullName').addEventListener('input', function(e) {
     if (this.value && !validateFullName(this.value)) {
         showFieldError('fullName', 'ФИО может содержать только буквы, пробелы ');
@@ -215,7 +182,6 @@ document.getElementById('phone').addEventListener('input', function(e) {
     saveFormData();
 });
 
-// Сохранение данных формы при изменении полей
 const otherInputs = feedbackForm.querySelectorAll('#email, #organization, #message');
 otherInputs.forEach(input => {
     input.addEventListener('input', saveFormData);
